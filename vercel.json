@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd my-book && npm install && npm run build",
+  "outputDirectory": "my-book/build",
+  "installCommand": "echo 'Skipping root install'",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}

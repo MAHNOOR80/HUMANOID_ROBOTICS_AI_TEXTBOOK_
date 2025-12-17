@@ -1,0 +1,123 @@
+# Function Interface Contracts for main.py
+
+## get_all_urls
+**Description**: Discovers and returns all accessible URLs from a given Docusaurus site
+
+**Input Parameters**:
+  - root_url (string): The root URL of the Docusaurus site to crawl
+  - max_depth (integer, optional): Maximum depth to crawl (default: 2)
+  - delay (float, optional): Delay between requests in seconds (default: 0.5)
+
+**Return Value**:
+  - List[string]: A list of all discovered URLs from the site
+
+**Error Conditions**:
+  - Raises exception if root_url is invalid
+  - Raises exception if the site is inaccessible
+  - May return empty list if no crawlable URLs are found
+
+## extract_text_from_url
+**Description**: Extracts and cleans text content from a single URL
+
+**Input Parameters**:
+  - url (string): The URL to extract text from
+
+**Return Value**:
+  - dict: Contains the following keys:
+    - "url": The original URL
+    - "title": The page title
+    - "content": The cleaned text content
+    - "status": Extraction status ("success", "error")
+
+**Error Conditions**:
+  - Returns status "error" if URL is inaccessible
+  - Returns status "error" if content cannot be parsed
+
+## chunk_text
+**Description**: Splits large text content into smaller chunks for embedding
+
+**Input Parameters**:
+  - text (string): The text to be chunked
+  - chunk_size (integer, optional): Maximum size of each chunk (default: 1000)
+  - chunk_overlap (integer, optional): Overlap between chunks (default: 100)
+
+**Return Value**:
+  - List[dict]: List of chunk objects, each containing:
+    - "id": Unique ID for the chunk
+    - "text": The chunk text
+    - "source_url": The source URL
+    - "chunk_index": Position of the chunk in the original text
+
+**Error Conditions**:
+  - Raises exception if chunk_size is less than or equal to chunk_overlap
+
+## embed
+**Description**: Generates embeddings for text chunks using Cohere API
+
+**Input Parameters**:
+  - chunks (List[dict]): List of text chunks to embed
+  - model (string, optional): Embedding model to use (default: "embed-multilingual-v2.0")
+
+**Return Value**:
+  - List[dict]: List of embedded chunks with added vector data:
+    - "id": Unique ID for the chunk
+    - "text": The original text
+    - "source_url": The source URL
+    - "chunk_index": Position of the chunk in the original text
+    - "vector": The embedding vector (List[float])
+    - "embedding_model": The model used for embedding
+
+**Error Conditions**:
+  - Raises exception if Cohere API is unavailable
+  - Raises exception if text exceeds API limits without proper chunking
+
+## create_collection
+**Description**: Creates a Qdrant collection for storing embeddings
+
+**Input Parameters**:
+  - collection_name (string): Name of the collection to create (default: "rag_embedding")
+  - vector_size (integer): Dimension of the embedding vectors (default: 768 for Cohere multilingual model)
+  - distance (string): Distance metric for similarity search (default: "Cosine")
+
+**Return Value**:
+  - boolean: True if collection was created successfully, False if already exists
+
+**Error Conditions**:
+  - Raises exception if Qdrant is unavailable
+  - Raises exception if collection parameters are invalid
+
+## save_chunk_to_qdrant
+**Description**: Saves a single embedded chunk to the Qdrant collection
+
+**Input Parameters**:
+  - chunk (dict): The embedded chunk to save
+  - collection_name (string): Name of the collection to save to (default: "rag_embedding")
+
+**Return Value**:
+  - boolean: True if save was successful
+
+**Error Conditions**:
+  - Raises exception if Qdrant is unavailable
+  - Raises exception if chunk format is invalid
+  - Raises exception if collection doesn't exist
+
+## main
+**Description**: Main execution function that orchestrates the entire pipeline
+
+**Input Parameters**:
+  - url (string): The root Docusaurus URL to process
+  - collection_name (string, optional): Name of Qdrant collection (default: "rag_embedding")
+  - chunk_size (integer, optional): Size of text chunks (default: 1000)
+  - chunk_overlap (integer, optional): Overlap between chunks (default: 100)
+
+**Return Value**:
+  - dict: Summary of the pipeline execution including:
+    - "total_urls_found": Number of URLs discovered
+    - "total_chunks_processed": Number of text chunks processed
+    - "total_embeddings_stored": Number of embeddings stored in Qdrant
+    - "execution_time": Time taken to complete the pipeline
+    - "errors": List of any errors encountered
+
+**Error Conditions**:
+  - Raises exception if any critical step fails
+  - May complete with partial success if some URLs fail but others succeed

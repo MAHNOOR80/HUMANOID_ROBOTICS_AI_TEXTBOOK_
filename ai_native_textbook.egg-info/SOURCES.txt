@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+ai_native_textbook.egg-info/PKG-INFO
+ai_native_textbook.egg-info/SOURCES.txt
+ai_native_textbook.egg-info/dependency_links.txt
+ai_native_textbook.egg-info/requires.txt
+ai_native_textbook.egg-info/top_level.txt
+my-book/node_modules/shell-quote/print.py

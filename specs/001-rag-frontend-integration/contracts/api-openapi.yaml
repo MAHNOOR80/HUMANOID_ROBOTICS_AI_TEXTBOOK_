@@ -1,0 +1,384 @@
+openapi: 3.0.3
+info:
+  title: RAG Agent API
+  description: HTTP API for querying the RAG agent backend to retrieve grounded answers from the humanoid robotics textbook
+  version: 1.0.0
+  contact:
+    name: AI Native Textbook Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server (TBD)
+
+paths:
+  /api/query:
+    post:
+      summary: Submit a query to the RAG agent
+      description: |
+        Send a natural language question to the RAG agent. The agent will:
+        1. Retrieve relevant chunks from Qdrant vector database
+        2. Generate a grounded answer using LLM (Gemini/GPT)
+        3. Return answer with source citations and confidence scores
+
+        Supports two modes:
+        - `full_book`: Search entire textbook collection
+        - `selected_text`: Ground answer only in user-provided text snippet
+      operationId: queryAgent
+      tags:
+        - Query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+            examples:
+              full_book_query:
+                summary: Full-book query
+                value:
+                  text: "What is inverse kinematics in humanoid robotics?"
+                  mode: "full_book"
+              selected_text_query:
+                summary: Selected-text query
+                value:
+                  text: "Explain this concept in simple terms"
+                  selected_text: "Inverse kinematics (IK) is a method to calculate the joint parameters needed to place the end effector of a kinematic chain at a desired position..."
+                  mode: "selected_text"
+      responses:
+        '200':
+          description: Successful query - answer generated with sources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+              examples:
+                success_response:
+                  summary: Successful answer with sources
+                  value:
+                    query_id: "550e8400-e29b-41d4-a716-446655440000"
+                    status: "success"
+                    answer: "Inverse kinematics (IK) is a method to calculate joint parameters needed to place the end effector at a desired position [1]. In humanoid robotics, IK is crucial for tasks like reaching and grasping [2]."
+                    confidence:
+                      retrieval_quality: 0.92
+                      coverage_score: 0.85
+                      entailment_score: 0.88
+                      lexical_overlap: 0.75
+                      overall: 0.87
+                      level: "high"
+                    sources:
+                      - chunk_id: "chunk_001"
+                        citation_index: 1
+                        relevance_score: 0.92
+                        excerpt: "Inverse kinematics (IK) is a method to calculate joint parameters needed to place the end effector at a desired position..."
+                        metadata:
+                          section_title: "Chapter 2: Kinematics Fundamentals"
+                          url: "/docs/chapter-2#inverse-kinematics"
+                          chunk_index: 5
+                      - chunk_id: "chunk_042"
+                        citation_index: 2
+                        relevance_score: 0.85
+                        excerpt: "In humanoid robotics, IK is crucial for tasks like reaching and grasping objects..."
+                        metadata:
+                          section_title: "Chapter 6: Manipulation and Grasping"
+                          url: "/docs/chapter-6#ik-applications"
+                          chunk_index: 12
+                    metadata:
+                      model: "gemini-pro"
+                      temperature: 0.2
+                      total_time_ms: 2340.5
+                      retrieval_time_ms: 850.2
+                      generation_time_ms: 1490.3
+                      timestamp: "2025-12-13T10:30:45.123Z"
+                insufficient_context_response:
+                  summary: Insufficient information found
+                  value:
+                    query_id: "550e8400-e29b-41d4-a716-446655440001"
+                    status: "insufficient_context"
+                    error_message: "I cannot find sufficient information in the provided textbook content to answer this question."
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                query_too_long:
+                  summary: Query exceeds max length
+                  value:
+                    detail: "Query text exceeds maximum length of 500 characters"
+                missing_selected_text:
+                  summary: Selected text mode without text
+                  value:
+                    detail: "selected_text required when mode is selected_text"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+              examples:
+                error_response:
+                  summary: Backend processing error
+                  value:
+                    query_id: "550e8400-e29b-41d4-a716-446655440002"
+                    status: "error"
+                    error_message: "Failed to connect to Qdrant database"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check if the API server and dependencies (Qdrant, LLM) are operational
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  services:
+                    type: object
+                    properties:
+                      qdrant:
+                        type: string
+                        enum: [connected, disconnected]
+                      llm:
+                        type: string
+                        enum: [available, unavailable]
+              example:
+                status: "healthy"
+                services:
+                  qdrant: "connected"
+                  llm: "available"
+
+components:
+  schemas:
+    QueryRequest:
+      type: object
+      required:
+        - text
+        - mode
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: The natural language question to ask
+          example: "What is inverse kinematics?"
+        selected_text:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional text snippet from the page (for selected-text mode)
+          example: "Inverse kinematics (IK) is a method..."
+        mode:
+          type: string
+          enum: [full_book, selected_text]
+          default: full_book
+          description: |
+            Query mode:
+            - `full_book`: Search entire textbook collection
+            - `selected_text`: Ground answer only in provided text snippet
+
+    AgentResponse:
+      type: object
+      required:
+        - query_id
+        - status
+      properties:
+        query_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the query
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          enum: [success, insufficient_context, error]
+          description: Response status
+        answer:
+          type: string
+          nullable: true
+          description: Generated answer with inline citations (required if status is success)
+          example: "Inverse kinematics calculates joint parameters [1]..."
+        confidence:
+          $ref: '#/components/schemas/ConfidenceScore'
+          nullable: true
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceReference'
+          nullable: true
+          description: Array of source citations (required if status is success)
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+          description: Error details (required if status is error or insufficient_context)
+
+    ConfidenceScore:
+      type: object
+      required:
+        - retrieval_quality
+        - coverage_score
+        - entailment_score
+        - lexical_overlap
+        - overall
+        - level
+      properties:
+        retrieval_quality:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Max similarity score from retrieval
+        coverage_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Percentage of query topics covered
+        entailment_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Answer-context entailment score
+        lexical_overlap:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Lexical overlap between answer and chunks
+        overall:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Weighted average of all confidence factors
+        level:
+          type: string
+          enum: [high, medium, low]
+          description: Human-readable confidence level
+
+    SourceReference:
+      type: object
+      required:
+        - chunk_id
+        - citation_index
+        - relevance_score
+        - excerpt
+        - metadata
+      properties:
+        chunk_id:
+          oneOf:
+            - type: string
+            - type: integer
+          description: References stored chunk in Qdrant
+        citation_index:
+          type: integer
+          minimum: 1
+          description: Position in answer (1 for [1], 2 for [2])
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Similarity score from retrieval
+        excerpt:
+          type: string
+          description: Short text preview from the chunk (100-200 chars recommended)
+          maxLength: 500
+        metadata:
+          $ref: '#/components/schemas/ChunkMetadata'
+
+    ChunkMetadata:
+      type: object
+      properties:
+        page_number:
+          type: integer
+          nullable: true
+          description: Page number in original textbook
+        section_title:
+          type: string
+          nullable: true
+          description: Section or chapter title
+        chapter:
+          type: string
+          nullable: true
+          description: Chapter name
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: Source URL from textbook website
+        chunk_index:
+          type: integer
+          nullable: true
+          description: Sequential index of chunk in document
+
+    ResponseMetadata:
+      type: object
+      required:
+        - model
+        - temperature
+        - total_time_ms
+        - retrieval_time_ms
+        - generation_time_ms
+        - timestamp
+      properties:
+        model:
+          type: string
+          description: LLM model used
+          example: "gemini-pro"
+        temperature:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Generation temperature
+        total_time_ms:
+          type: number
+          format: float
+          description: End-to-end response time in milliseconds
+        retrieval_time_ms:
+          type: number
+          format: float
+          description: Time spent on Qdrant retrieval in milliseconds
+        generation_time_ms:
+          type: number
+          format: float
+          description: Time spent on LLM generation in milliseconds
+        tokens_used:
+          type: integer
+          nullable: true
+          description: Total tokens consumed
+        timestamp:
+          type: string
+          format: date-time
+          description: Response generation timestamp (ISO 8601)
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Query text exceeds maximum length of 500 characters"
+
+tags:
+  - name: Query
+    description: Query submission and retrieval
+  - name: Health
+    description: Health check endpoints

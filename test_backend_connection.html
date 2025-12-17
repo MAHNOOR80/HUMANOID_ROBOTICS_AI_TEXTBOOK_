@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .url-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Backend Connection Test</h1>
+
+        <div class="test-section">
+            <h3>Backend URL</h3>
+            <div class="url-display" id="backendUrl">Loading...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 1: Health Check</h3>
+            <button onclick="testHealth()">Run Health Check</button>
+            <div id="healthResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Query Endpoint (Simple Test)</h3>
+            <button onclick="testQuery()">Test Query</button>
+            <div id="queryResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Debug Information</h3>
+            <pre id="debugInfo">Open browser console (F12) to see detailed logs...</pre>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://backend-production-e37e.up.railway.app';
+
+        document.getElementById('backendUrl').textContent = BACKEND_URL;
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '<div class="status pending">Testing...</div>';
+
+            try {
+                console.log('Testing health endpoint:', `${BACKEND_URL}/health`);
+                const response = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                console.log('Health check response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Health check data:', data);
+                    resultDiv.innerHTML = `
+                        <div class="status success">✓ Success!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    console.error('Health check failed:', errorText);
+                    resultDiv.innerHTML = `
+                        <div class="status error">✗ Failed (Status: ${response.status})</div>
+                        <pre>${errorText}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Health check error:', error);
+                resultDiv.innerHTML = `
+                    <div class="status error">✗ Error</div>
+                    <pre>${error.message}\n\nCheck browser console for details.</pre>
+                `;
+            }
+        }
+
+        async function testQuery() {
+            const resultDiv = document.getElementById('queryResult');
+            resultDiv.innerHTML = '<div class="status pending">Testing query endpoint...</div>';
+
+            const testQuery = {
+                text: "What is humanoid robotics?",
+                mode: "full_book"
+            };
+
+            try {
+                console.log('Testing query endpoint:', `${BACKEND_URL}/api/query`);
+                console.log('Query payload:', testQuery);
+
+                const response = await fetch(`${BACKEND_URL}/api/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testQuery),
+                });
+
+                console.log('Query response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Query response data:', data);
+                    resultDiv.innerHTML = `
+                        <div class="status success">✓ Query Successful!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    console.error('Query failed:', errorText);
+                    resultDiv.innerHTML = `
+                        <div class="status error">✗ Query Failed (Status: ${response.status})</div>
+                        <pre>${errorText}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Query error:', error);
+                resultDiv.innerHTML = `
+                    <div class="status error">✗ Error</div>
+                    <pre>${error.message}\n\nPossible issues:
+- CORS (Cross-Origin) restrictions
+- Network connectivity
+- Backend not running
+- Invalid request format
+
+Check browser console (F12) for detailed error information.</pre>
+                `;
+            }
+        }
+
+        // Log environment info
+        console.log('Test page loaded. Backend URL:', BACKEND_URL);
+        console.log('Current origin:', window.location.origin);
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 500);
+        });
+    </script>
+</body>
+</html>
