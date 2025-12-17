@@ -11,7 +11,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://physical-ai-humanoid-robotics-textb-dun.vercel.app/',
+  url: 'https://humanoid-robotics-ai-textbook.vercel.app/',
   baseUrl: '/',
 
   organizationName: 'facebook',
