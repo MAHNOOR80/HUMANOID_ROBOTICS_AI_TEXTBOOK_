@@ -37,7 +37,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/MAHNOOR80/HUMANOID_ROBOTICS_AI_TEXTBOOK_.git',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -55,19 +55,77 @@ const config: Config = {
     navbar: {
       title: 'Physical AI Textbook',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'Physical AI & Humanoid Robotics Logo',
         src: 'img/logo.svg',
       },
+      hideOnScroll: false,
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          to: '/',
+          label: 'Home',
           position: 'left',
-          label: 'Textbook',
+        },
+        {
+          type: 'dropdown',
+          label: 'Chapters',
+          position: 'left',
+          items: [
+            {
+              label: 'Chapter 1: Introduction to Physical AI',
+              to: '/docs/chapter-1',
+            },
+            {
+              label: 'Chapter 2: The Robotic Nervous System',
+              to: '/docs/chapter-2',
+            },
+            {
+              label: 'Chapter 3: The Digital Twin',
+              to: '/docs/chapter-3',
+            },
+            {
+              label: 'Chapter 4: The AI-Robot Brain',
+              to: '/docs/chapter-4',
+            },
+            {
+              label: 'Chapter 5: Vision-Language-Action',
+              to: '/docs/chapter-5',
+            },
+            {
+              label: 'Chapter 6: Humanoid Robot Development',
+              to: '/docs/chapter-6',
+            },
+            {
+              label: 'Chapter 7: Conversational Robotics',
+              to: '/docs/chapter-7',
+            },
+            {
+              label: 'Chapter 8: Capstone Project',
+              to: '/docs/chapter-8',
+            },
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: 'Resources',
+          position: 'left',
+          items: [
+            {
+              label: 'Ask AI Assistant',
+              to: '/docs/chapter-1',
+            },
+            {
+              label: 'Getting Started',
+              to: '/docs/chapter-1',
+            },
+          ],
         },
         {
           href: 'https://github.com/MAHNOOR80/PHYSICAL_AI_HUMANOID_ROBOTICS_TEXTBOOK.git',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          type: 'search',
           position: 'right',
         },
       ],
@@ -76,33 +134,75 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Community',
+          title: 'Learn',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+              label: 'Introduction',
+              to: '/docs/chapter-1',
             },
             {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
+              label: 'All Chapters',
+              to: '/docs/chapter-1',
             },
             {
-              label: 'X',
-              href: 'https://x.com/docusaurus',
+              label: 'Getting Started',
+              to: '/docs/chapter-1',
             },
           ],
         },
         {
-          title: 'More',
+          title: 'Resources',
+          items: [
+            {
+              label: 'AI Assistant',
+              to: '/docs/chapter-1',
+            },
+            {
+              label: 'GitHub Repository',
+              href: 'https://github.com/MAHNOOR80/PHYSICAL_AI_HUMANOID_ROBOTICS_TEXTBOOK.git',
+            },
+            {
+              label: 'Report Issues',
+              href: 'https://github.com/MAHNOOR80/PHYSICAL_AI_HUMANOID_ROBOTICS_TEXTBOOK.git/issues',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'Discussions',
+              href: 'https://github.com/MAHNOOR80/HUMANOID_ROBOTICS_AI_TEXTBOOK_.git',
+            },
+            {
+              label: 'Contributors',
+              href: 'https://www.linkedin.com/in/mahnoor-naveed-4b1550367/',
+            },
+            {
+              label: 'License',
+              href: 'https://github.com/MAHNOOR80/HUMANOID_ROBOTICS_AI_TEXTBOOK_.git',
+            },
+          ],
+        },
+        {
+          title: 'Connect',
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              href: 'https://github.com/MAHNOOR80/HUMANOID_ROBOTICS_AI_TEXTBOOK_.git',
+            },
+            {
+              label: 'LinkedIn',
+              href: 'https://www.linkedin.com/in/mahnoor-naveed-4b1550367/',
+            },
+            {
+              label: 'Twitter',
+              href: 'https://twitter.com',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Physical AI & Humanoid Robotics Textbook. Built with ❤️ and Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

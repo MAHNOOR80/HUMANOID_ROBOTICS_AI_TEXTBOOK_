@@ -19,6 +19,7 @@ const RAGQueryWidgetComponent: React.FC<RAGQueryWidgetProps> = ({ onClose }) => 
   const [selectedText, setSelectedText] = useState<string>('');
   const [showSelectedTextQuery, setShowSelectedTextQuery] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const activeRequests = useRef<Set<string>>(new Set());
   const queryInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +131,7 @@ const RAGQueryWidgetComponent: React.FC<RAGQueryWidgetProps> = ({ onClose }) => 
     setLoading(true);
     setResponse(null);
     setError(null); // Clear any previous errors
+    setCurrentQuestion(query); // Store the current question
 
     try {
       const request: QueryRequest = {
@@ -277,6 +279,13 @@ const RAGQueryWidgetComponent: React.FC<RAGQueryWidgetProps> = ({ onClose }) => 
         aria-live="polite"
         aria-atomic="true"
       >
+        {/* Display user question when loading or when there's a response */}
+        {currentQuestion && (loading || response) && (
+          <div className={styles.userQuestionContainer} role="complementary">
+            <div className={styles.userQuestionLabel}>Your Question</div>
+            <p className={styles.userQuestionText}>{currentQuestion}</p>
+          </div>
+        )}
         <AnswerDisplay response={response} loading={loading} />
       </div>
 

@@ -5,6 +5,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
+import Testimonials from '@site/src/components/Testimonials';
 import Heading from '@theme/Heading';
 
 import styles from './index.module.css';
@@ -188,6 +189,7 @@ export default function Home(): ReactNode {
       <main className={styles.mainContent}>
         <TrustedBy />
         <HomepageFeatures />
+        <Testimonials />
         <CTASection />
       </main>
     </Layout>
